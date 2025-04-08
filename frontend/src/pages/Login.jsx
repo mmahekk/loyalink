@@ -7,7 +7,7 @@ import styles from './AuthPage.module.css'
 export default function Login() {
   const [utorid, setUtorid] = useState('')
   const [password, setPassword] = useState('')
-  const { login, logout, loaded } = useContext(AuthContext)
+  const { login, logout, loaded , user, setActiveRole} = useContext(AuthContext)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -18,11 +18,30 @@ export default function Login() {
     e.preventDefault()
     try {
       await login(utorid, password)
+      //setActiveRole(null)
+      // setTimeout(() => {
+      //   if (user?.role === 'regular') {
+      //     setActiveRole('regular')
+      //     navigate('/user')
+      //   } else {
+      //     navigate('/select-role')
+      //   }
+      // }, 100)
     } catch (err) {
       toast.error(err.response?.data?.error || 'Login Failed')
     }
   }
-
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'regular') {
+        setActiveRole('regular')
+        navigate('/user')
+      } else {
+        setActiveRole(null)
+        navigate('/select-role')
+      }
+    }
+  }, [user])
   return (
     <div className={styles.container}>
       <h1>Login</h1>

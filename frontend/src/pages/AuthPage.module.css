@@ -35,6 +35,13 @@ input {
   margin: 1rem auto;
   padding: 1rem;
 }
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
 .avatar {
   width: 100px;
   height: 100px;

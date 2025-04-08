@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [token, setToken] = useState(localStorage.getItem('token'))
     const [loaded, setLoaded] = useState(false);
+    const [activeRole, setActiveRole] = useState(null);
     const navigate = useNavigate()
   
     const login = async (utorid, password) => {
@@ -61,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     }, [token])
   
     return (
-      <AuthContext.Provider value={{ user, token, login, logout, loaded, setUser }}>
+      <AuthContext.Provider value={{ user, token, login, logout, loaded, setUser, activeRole, setActiveRole }}>
         {children}
       </AuthContext.Provider>
     )

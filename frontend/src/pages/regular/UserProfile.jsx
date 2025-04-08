@@ -6,9 +6,16 @@ import styles from '../AuthPage.module.css'
 
 export default function UserProfile() {
   const { user, token, setUser } = useContext(AuthContext)
-  const validBirthday = user?.birthday && !isNaN(new Date(user.birthday).getTime())
-  ? new Date(user.birthday).toISOString().split('T')[0]
-  : ''
+
+  const isValidDate = (date) => {
+    const parsed = new Date(date)
+    return date && !isNaN(parsed.getTime())
+  }
+  
+  const validBirthday = isValidDate(user?.birthday)
+    ? new Date(user.birthday).toISOString().split('T')[0]
+    : ''
+  
 
   const [form, setForm] = useState({
     name: user?.name || '',
@@ -16,9 +23,10 @@ export default function UserProfile() {
     birthday: validBirthday
   })
 
-  const [passwordForm, setPasswordForm] = useState({ old: '', new: '' })
-  const [avatar, setAvatar] = useState(null)
+  const [editingProfile, setEditingProfile] = useState(false)
   const [editingAvatar, setEditingAvatar] = useState(false)
+  const [avatar, setAvatar] = useState(null)
+  const [passwordForm, setPasswordForm] = useState({ old: '', new: '' })
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -32,14 +40,13 @@ export default function UserProfile() {
     e.preventDefault()
     const payload = {}
 
-    const formattedUserBirthday = user?.birthday
-      ? new Date(user.birthday).toISOString().split('T')[0]
-      : ''
 
     if (form.name !== user.name) payload.name = form.name
     if (form.email !== user.email) payload.email = form.email
-    if (form.birthday !== formattedUserBirthday) payload.birthday = form.birthday
-
+    if ((form.birthday || '') !== (validBirthday || '')) {
+        payload.birthday = form.birthday || null  // send null if field is empty
+      }
+      
     if (Object.keys(payload).length === 0) {
       toast('No changes to update')
       return
@@ -52,9 +59,9 @@ export default function UserProfile() {
       if (res.status === 200) {
         toast.success('Profile updated!')
         setUser(prev => ({ ...prev, ...res.data }))
+        setEditingProfile(false)
       }
     } catch (err) {
-      console.error('PATCH failed:', err)
       toast.error(err.response?.data?.error || 'Update failed')
     }
   }
@@ -72,10 +79,6 @@ export default function UserProfile() {
     }
   }
 
-  const avatarUrl = user?.avatarUrl && user.avatarUrl.trim() !== ''
-  ? `http://localhost:3000${user.avatarUrl}?v=${Date.now()}`
-  : '/default-avatar.png'
-
   const submitAvatar = async (e) => {
     e.preventDefault()
     const formData = new FormData()
@@ -89,15 +92,20 @@ export default function UserProfile() {
       })
       toast.success('Avatar updated!')
       setUser(prev => ({ ...prev, ...res.data }))
+      setEditingAvatar(false)
     } catch (err) {
       toast.error(err.response?.data?.error || 'Avatar upload failed')
     }
   }
 
- 
+  const avatarUrl =
+    user?.avatarUrl && user.avatarUrl.trim() !== ''
+      ? `http://localhost:3000${user.avatarUrl}?v=${Date.now()}`
+      : '/default-avatar.png'
+
   return (
-    <div className={styles.container}>
-      <h1>My Profile</h1>
+    <div className={styles.container} style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <h1 style={{ textAlign: 'center' }}>My Profile</h1>
 
       <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
         <img
@@ -114,15 +122,7 @@ export default function UserProfile() {
         <h2>{user.name}</h2>
         <button
           onClick={() => setEditingAvatar(prev => !prev)}
-          style={{
-            marginTop: '0.5rem',
-            padding: '0.4rem 1rem',
-            backgroundColor: '#1C2D5A',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
+          className={styles.formButton}
         >
           {editingAvatar ? 'Cancel' : 'Edit Avatar'}
         </button>
@@ -135,38 +135,93 @@ export default function UserProfile() {
         </form>
       )}
 
+      <h3 style={{ textAlign: 'center' }}>Profile Information</h3>
       <form onSubmit={handleSubmit} className={styles.form}>
         <label>
           Name
-          <input name="name" value={form.name} onChange={handleChange} />
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            disabled={!editingProfile}
+          />
         </label>
         <label>
           Email
-          <input name="email" value={form.email} onChange={handleChange} />
+          <input
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            disabled={!editingProfile}
+          />
         </label>
         <label>
           Birthday
-          <input name="birthday" type="date" value={form.birthday} onChange={handleChange} />
+          <input
+            name="birthday"
+            type="date"
+            value={form.birthday}
+            onChange={handleChange}
+            disabled={!editingProfile}
+          />
         </label>
-        <button type="submit">Update</button>
+
+        {editingProfile ? (
+        <div style={{ display: 'flex', gap: '1rem' }}>
+            <button type="submit" className={styles.formButton}>
+            Save Changes
+            </button>
+            <button
+            type="button"
+            onClick={() => {
+                setForm({
+                name: user?.name || '',
+                email: user?.email || '',
+                birthday: isValidDate(user?.birthday)
+                    ? new Date(user.birthday).toISOString().split('T')[0]
+                    : ''
+                })
+                setEditingProfile(false)
+            }}
+            className={styles.formButton}
+            >
+            Cancel
+            </button>
+        </div>
+        ) : (
+        <button
+            type="button"
+            onClick={() => setEditingProfile(true)}
+            className={styles.formButton}
+        >
+            Edit Profile
+        </button>
+        )}
+
       </form>
 
-      <h3>Change Password</h3>
+      <h3 style={{ marginTop: '2rem' }}>Change Password</h3>
       <form onSubmit={submitPassword} className={styles.form}>
-        <input
-          name="old"
-          type="password"
-          placeholder="Current password"
-          value={passwordForm.old}
-          onChange={handlePasswordChange}
-        />
-        <input
-          name="new"
-          type="password"
-          placeholder="New password"
-          value={passwordForm.new}
-          onChange={handlePasswordChange}
-        />
+        <label>
+          Current Password
+          <input
+            name="old"
+            type="password"
+            placeholder="Current password"
+            value={passwordForm.old}
+            onChange={handlePasswordChange}
+          />
+        </label>
+        <label>
+          New Password
+          <input
+            name="new"
+            type="password"
+            placeholder="New password"
+            value={passwordForm.new}
+            onChange={handlePasswordChange}
+          />
+        </label>
         <button type="submit">Update Password</button>
       </form>
     </div>
