@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from '../../api/axiosInstance'
 import { toast } from 'react-hot-toast'
-import { Navigate, Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 export default function UserTransactions() {
   const [transactions, setTransactions] = useState([])
@@ -9,6 +9,8 @@ export default function UserTransactions() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
+  const [orderBy, setOrderBy] = useState('newest')
+  const [relatedMap, setRelatedMap] = useState({})
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState({
@@ -24,6 +26,7 @@ export default function UserTransactions() {
       const params = {
         page: pageNum,
         limit: 5,
+        orderBy,
         ...filters
       }
 
@@ -45,7 +48,22 @@ export default function UserTransactions() {
 
   useEffect(() => {
     fetchTransactions(page)
-  }, [page])
+  }, [page, orderBy])
+
+  // Fetch missing related UTORids
+  useEffect(() => {
+    const missing = transactions.filter(tx =>
+      tx.relatedId && !relatedMap[tx.relatedId]
+    )
+    missing.forEach(async (tx) => {
+      try {
+        const res = await axios.get(`/users/id/${tx.relatedId}`)
+        setRelatedMap(prev => ({ ...prev, [tx.relatedId]: res.data.utorid }))
+      } catch {
+        setRelatedMap(prev => ({ ...prev, [tx.relatedId]: 'Unknown' }))
+      }
+    })
+  }, [transactions])
 
   const handleFilterSubmit = (e) => {
     e.preventDefault()
@@ -155,6 +173,15 @@ export default function UserTransactions() {
             style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
           />
 
+          <select
+            value={orderBy}
+            onChange={(e) => setOrderBy(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'space-between' }}>
             <button type="submit" style={{ flex: 1, padding: '0.5rem' }}>Apply</button>
             <button type="button" onClick={handleClearFilters} style={{ flex: 1, padding: '0.5rem' }}>Clear</button>
@@ -177,45 +204,54 @@ export default function UserTransactions() {
             <strong>{tx.type.toUpperCase()}</strong>
             {tx.amount !== undefined && <span>{tx.amount} pts</span>}
           </div>
-          {tx.relatedId && <p>Related ID: {tx.relatedId}</p>}
+
+          {tx.relatedId && (
+            <p>
+              <strong>{tx.type === 'transfer' ? 'To' : 'Related'}:</strong>{' '}
+              {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}
+            </p>
+          )}
+
           {tx.promotionId && <p>Promo ID: {tx.promotionId}</p>}
           {tx.remark && <p>Note: {tx.remark}</p>}
+
           {tx.type === 'redemption' && (
-           <>
-           <div style={{
-             marginTop: '0.5rem',
-             display: 'inline-block',
-             padding: '0.25rem 0.6rem',
-             borderRadius: '6px',
-             fontSize: '0.85rem',
-             fontWeight: 500,
-             color: tx.processed ? '#155724' : '#856404',
-             backgroundColor: tx.processed ? '#d4edda' : '#fff3cd',
-             border: `1px solid ${tx.processed ? '#c3e6cb' : '#ffeeba'}`
-           }}>
-             {tx.processed ? 'Processed' : 'Pending'}
-           </div>
-       
-           {!tx.processed && (
-             <div style={{ marginTop: '0.5rem' }}>
-               <button
-                 onClick={() => navigate(`/user/redeem/${tx.id}`)}
-                 style={{
-                   padding: '0.4rem 0.75rem',
-                   marginTop: '0.4rem',
-                   borderRadius: '6px',
-                   border: 'none',
-                   background: '#1C2D5A',
-                   color: 'white',
-                   cursor: 'pointer'
-                 }}
-               >
-                 View QR Code
-               </button>
-             </div>
-           )}
-         </>
+            <>
+              <div style={{
+                marginTop: '0.5rem',
+                display: 'inline-block',
+                padding: '0.25rem 0.6rem',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                fontWeight: 500,
+                color: tx.processed ? '#155724' : '#856404',
+                backgroundColor: tx.processed ? '#d4edda' : '#fff3cd',
+                border: `1px solid ${tx.processed ? '#c3e6cb' : '#ffeeba'}`
+              }}>
+                {tx.processed ? 'Processed' : 'Pending'}
+              </div>
+
+              {!tx.processed && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button
+                    onClick={() => navigate(`/user/redeem/${tx.id}`)}
+                    style={{
+                      padding: '0.4rem 0.75rem',
+                      marginTop: '0.4rem',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: '#1C2D5A',
+                      color: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View QR Code
+                  </button>
+                </div>
+              )}
+            </>
           )}
+
           <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>By: {tx.createdBy}</p>
         </div>
       ))}
