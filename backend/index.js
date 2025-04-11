@@ -645,6 +645,25 @@ app.get('/users/utorid/:utorid', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 })
+// Used to resolve a relatedId to a utorid for display
+app.get('/users/id/:id', authenticate, async (req, res) => {
+  const { id } = req.params
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) }
+    })
+
+    if (!user) return res.status(404).json({ error: 'User not found' })
+
+    res.json({
+      utorid: user.utorid,
+      name: user.name
+    })
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
 
 
 /**
