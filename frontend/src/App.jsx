@@ -36,6 +36,7 @@ export default function App() {
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
         <Route path="/success" element={<Success />} />
+        
         <Route path="/select-role" element={<RoleSelector />} />
         <Route
           path="/user"
@@ -85,6 +86,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        
         <Route
           path="/user/promotions"
           element={

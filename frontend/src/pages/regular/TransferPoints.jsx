@@ -5,21 +5,34 @@ import { toast } from 'react-hot-toast'
 import styles from '../AuthPage.module.css'
 
 export default function TransferPoints() {
-  const [recipientId, setRecipientId] = useState('')
+  //const [recipientId, setRecipientId] = useState('')
+  const [utorid, setUtorid] = useState('')
   const [amount, setAmount] = useState('')
   const [remark, setRemark] = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if(!utorid || !amount){
+      toast.error('Please enter a UtorId and amount');
+      return 
+    }
     try {
-      await axios.post(`/users/${recipientId}/transactions`, {
+      const userRes = await axios.get(`/users/utorid/${utorid}`)
+      const recipient = userRes.data
+      
+      if (!recipient) {
+        toast.error('Recipient not found')
+        return
+      }
+      
+      await axios.post(`/users/${recipient.id}/transactions`, {
         type: 'transfer',
         amount: parseInt(amount),
         remark
       })
       toast.success('Points transferred successfully')
-      navigate('/user')
+     // navigate('/user')
     } catch (err) {
       toast.error(err.response?.data?.error || 'Transfer failed')
     }
@@ -30,8 +43,8 @@ export default function TransferPoints() {
       <h1>Transfer Points</h1>
       <form onSubmit={handleSubmit}>
         <input
-          value={recipientId}
-          onChange={(e) => setRecipientId(e.target.value)}
+          value={utorid}
+          onChange={(e) => setUtorid(e.target.value)}
           placeholder="Recipient UTORid"
         />
         <input
