@@ -51,6 +51,8 @@ model User {
 
   transactionsMade  Transaction[] @relation("UserTransactionsCreated")
 
+  transactionsProcessed Transaction[] @relation("ProcessedTransactions")
+
   eventOrganizers   EventOrganizer[]
   eventGuests       EventGuest[]
 
@@ -72,6 +74,9 @@ model Transaction {
   remark       String?
   createdAt    DateTime        @default(now())
   relatedId    Int?
+  processed    Boolean         @default(false)
+  processedById Int?         
+  processedBy  User?           @relation("ProcessedTransactions", fields: [processedById], references: [id])
 
   promotions   TransactionPromotion[]
 }

@@ -625,6 +625,28 @@ app.get('/users/:userId', authenticate, authorize(["cashier", "manager", "superu
 });
 
 
+// Used for transferring points in the frontend
+app.get('/users/utorid/:utorid', authenticate, async (req, res) => {
+  const { utorid } = req.params
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { utorid }
+    })
+
+    if (!user) return res.status(404).json({ error: 'User not found' })
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      utorid: user.utorid
+    })
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+
 /**
  * PATCH /users/:userId
  */
@@ -716,6 +738,255 @@ app.patch('/users/:userId', authenticate, authorize(["manager", "superuser"]), a
         return res.status(500).json({ error: "Internal Server Error" });
     }
 });
+/**
+ * POST /users/me/transactions - redemption transaction
+ */
+
+app.post('/users/me/transactions', authenticate, async (req, res) => {
+  try {
+    const user = req.user;
+    const { type, amount, remark } = req.body;
+
+    if (!type || typeof type !== 'string') {
+      return res.status(400).json({ error: "Transaction type cannot be empty." });
+    }
+
+    if (type !== "redemption") {
+      return res.status(400).json({ error: "Only 'redemption' transactions are allowed on this route." });
+    }
+
+    if (!amount || typeof amount !== 'number') {
+      return res.status(400).json({ error: "Amount must be a number and cannot be empty." });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({ error: "Amount must be a positive value." });
+    }
+
+    if (remark && typeof remark !== 'string') {
+      return res.status(400).json({ error: "Remark must be a string." });
+    }
+
+    if (user.points < amount) {
+      return res.status(400).json({ error: `Insufficient point balance for ${amount} redemption.` });
+    }
+
+    const redemptionTx = await prisma.transaction.create({
+      data: {
+        userId: user.id,
+        type: 'redemption',
+        amount,
+        createdById: user.id,
+        remark: remark || '',
+        processed: false // Add default processed flag if needed
+      }
+    });
+
+    if (!redemptionTx) {
+      return res.status(500).json({ error: "Redemption could not be processed due to internal error." });
+    }
+
+    return res.status(201).json({
+      id: redemptionTx.id,
+      utorid: user.utorid,
+      type: 'redemption',
+      processedBy: null,
+      amount,
+      remark: redemptionTx.remark,
+      createdBy: user.utorid
+    });
+
+  } catch (err) {
+    console.error("Error processing redemption transaction:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+app.get('/users/me/transactions', authenticate,  async (req, res) => {
+    
+    try{
+      const user = req.user;
+      const {
+        type,
+        relatedId,
+        promotionId,
+        amount,
+        operator,
+        page = 1,
+        limit = 10
+      } = req.query;
+      const filters = {
+        userId: user.id
+      };
+
+      if (type) {
+        if (typeof type !== 'string') {
+          return res.status(400).json({ error: "type must be a string" });
+        }
+        filters.type = type;
+        if (relatedId) {
+          const parsedId = parseInt(relatedId);
+          if (isNaN(parsedId)) {
+            return res.status(400).json({ error: "relatedId must be a number" });
+          }
+          filters.relatedId = parsedId;
+        }
+      }
+
+      if ((amount && !operator) || (!amount && operator)) {
+        return res.status(400).json({ error: "Both amount and operator must be provided together." });
+      }
+
+      const amountFilter = {};
+      if (amount && operator) {
+        const parsedAmount = parseInt(amount);
+        if (isNaN(parsedAmount) || !['gte', 'lte'].includes(operator)) {
+          return res.status(400).json({ error: "Invalid amount or operator." });
+        }
+        amountFilter[operator] = parsedAmount;
+      }
+
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const take = parseInt(limit);
+
+      const where = {
+        ...filters,
+        ...(Object.keys(amountFilter).length > 0 && { amount: amountFilter }),
+        ...(promotionId && {
+          promotions: {
+            some: {
+              promotionId: parseInt(promotionId)
+            }
+          }
+        })
+      };
+
+      const [count, results] = await Promise.all([
+        prisma.transaction.count({ where }),
+        prisma.transaction.findMany({
+          where,
+          skip,
+          take,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            createdBy: { select: { utorid: true } },
+            promotions: { select: { promotionId: true } }
+          }
+        })
+      ]);
+
+      const formatted = results.map(tx => ({
+        id: tx.id,
+        type: tx.type,
+        spent: tx.spent ? parseFloat(tx.spent) : undefined,
+        amount: tx.amount,
+        relatedId: tx.relatedId ?? undefined,
+        promotionIds: tx.promotions.map(p => p.promotionId),
+        remark: tx.remark || "",
+        createdBy: tx.createdBy.utorid
+      }));
+
+      return res.json({
+        count,
+        results: formatted
+      });
+
+    }catch(err){
+      console.error("Error in retrieving your transactions in backend/usersme", err);
+      return res.status(500).json({error: "Internal Server Error."})
+    }
+})
+/**
+ * POST /transactions - transfer
+ */
+app.post('/users/:userId/transactions', authenticate, 
+  authorize(["regular", "cashier", "manager", "superuser"]), async (req, res) => {
+    try{
+      const sender = req.user;
+      const recipientId = parseInt(req.params.userId);
+      const {type, amount, remark} = req.body;
+      if(!type){
+        return res.status(400).json({error: "Transaction type cannot be empty."});
+      }
+      if(typeof type !== 'string' || type !== "transfer"){
+        return res.status(400).json({error: "Type of transaction must be 'transfer'."})
+      }
+      if(!amount || typeof amount !== 'number'){
+        return res.status(400).json({error: "Amount cannot be empty. Please enter a number."});
+      }
+      if(amount <=0 ){
+        return res.status(400).json({error: "Amount must be a positive value."});
+      }
+      if(remark && typeof remark !== 'string'){
+        return res.status(400).json({error: "Remark must be of type string"});
+      }
+
+      const recipient = await prisma.user.findUnique({where: {id: recipientId}});
+      if(!recipient){
+        return res.status(404).json({error: "Recipient user not found."});
+      }
+      const senderUser = await prisma.user.findUnique({where: {id: sender.id}});
+      if(!senderUser.verified){
+        return res.status(403).json({error: "Sender is not verified"});
+      }
+      if(senderUser.points < amount){
+        return res.status(400).json({error: "Insufficient points to make this transfer transaction."});
+      }
+
+      const [senderUpdate, recipientUpdate, sentTx, receivedTx] = await prisma.$transaction([
+        prisma.user.update({
+          where: {id: senderUser.id},
+          data: {points: {decrement: amount}}
+        }),
+        prisma.user.update({
+          where: {id: recipientId},
+          data: {points: {increment: amount}}
+        }),
+        prisma.transaction.create({
+          data: {
+            userId: senderUser.id,
+            //user: senderUser,
+            createdById: senderUser.id,
+            //createdBy: senderUser,
+            type: 'transfer',
+            amount: -amount,
+            remark: remark ? remark : '',
+            relatedId: recipientId
+          }
+        }),
+        prisma.transaction.create({
+          data: {
+            userId: recipientId,
+            //user: recipient,
+            createdById: senderUser.id,
+            //createdBy: senderUser,
+            type: 'transfer',
+            amount,
+            remark: remark ? remark : '',
+            relatedId: senderUser.id
+          }
+        })
+      ]);
+      if(!sentTx || !receivedTx){
+        return res.status(500).json({error: "Transfer was not processed due to internal server error.."});
+      }
+      return res.status(200).json({
+        id: sentTx.id,
+        sender: senderUser.utorid,
+        recipient: recipient.utorid,
+        type: 'transfer',
+        sent: amount,
+        remark: remark ? remark : '',
+        createdBy: senderUser.utorid
+      });
+
+    }catch(err){
+      console.error("Error transfer transaction in backend", err.stack);
+      return res.status(500).json({ error: "Internal Server Error in transfer" });
+    }
+});
+
 
 
 /**
