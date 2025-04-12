@@ -797,7 +797,7 @@ app.post('/users/me/transactions', authenticate, async (req, res) => {
         amount,
         createdById: user.id,
         remark: remark || '',
-        processed: false // Add default processed flag if needed
+        processed: false 
       }
     });
 
@@ -2253,7 +2253,7 @@ app.get('/transactions', authenticate, async (req, res) => {
       }
   
       if (type) {
-        whereClause.type = type.toUpperCase(); 
+        whereClause.type = type;
       }
   
       if (relatedId !== undefined) {
@@ -2347,11 +2347,11 @@ app.get('/transactions', authenticate, async (req, res) => {
           promotionIds: promoIds,
           suspicious: tx.suspicious,
           remark: tx.remark,
-          createBy: tx.createdBy ? tx.createdBy.utorid : null,
+          createdBy: tx.createdBy ? tx.createdBy.utorid : null,
           relatedId: tx.relatedId
         };
   
-        if (tx.type === "REDEMPTION") {
+        if (tx.type === "redemption") {
           r["redeemed"] = Math.abs(tx.amount);
         }
   
@@ -2409,7 +2409,7 @@ app.get('/transactions/:transactionId', authenticate, async (req, res) => {
       let redeemedValue = undefined;
       if (tx.type === "purchase") {
         spentValue = tx.spent || 0; 
-      } else if (tx.type === "REDEMPTION") {
+      } else if (tx.type === "redemption") {
 
         redeemedValue = Math.abs(tx.amount);
       }
@@ -2458,7 +2458,7 @@ app.get('/transactions/:transactionId', authenticate, async (req, res) => {
             return res.status(404).json({ error: "Transaction not found." });
         }
 
-        if (tx.type !== "REDEMPTION") {
+        if (tx.type !== "redemption") {
             return res.status(400).json({ error: "Only redemption transactions can be processed." });
         }
 
@@ -2569,7 +2569,7 @@ app.patch('/transactions/:transactionId/suspicious', authenticate, async (req, r
       let redeemedValue = undefined;
       if (oldTx.type === "purchase") {
         spentValue = oldTx.spent;
-      } else if (oldTx.type === "REDEMPTION") {
+      } else if (oldTx.type === "redemption") {
         redeemedValue = Math.abs(oldTx.amount);
       }
   
