@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
+import { AuthContext } from '../../auth/AuthContext'
 import axios from '../../api/axiosInstance'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +12,7 @@ export default function UserTransactions() {
   const [showFilters, setShowFilters] = useState(false)
   const [orderBy, setOrderBy] = useState('newest')
   const [relatedMap, setRelatedMap] = useState({})
+  const {user} = useContext(AuthContext)
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState({
@@ -82,11 +84,11 @@ export default function UserTransactions() {
   }
 
   const typeColor = {
-    purchase: '#e0f7ff',
-    redemption: '#f0fff0',
-    transfer: '#fff0f0',
-    adjustment: '#f5f5f5',
-    event: '#f9f9ff'
+    transfer: '#e0f7ff',
+    redemption: '#fff0f0',
+    purchase: '#f9f9f9',
+    adjustment: '#fefae0',
+    event: '#f0fff4'
   }
 
   return (
@@ -207,7 +209,14 @@ export default function UserTransactions() {
 
           {tx.relatedId && (
             <p>
-              <strong>{tx.type === 'transfer' ? 'To' : 'Related'}:</strong>{' '}
+              <strong>
+                {tx.type === 'transfer'
+                  ? tx.amount < 0
+                    ? 'To'
+                    : 'From'
+                  : 'Related'}
+                :
+              </strong>{' '}
               {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}
             </p>
           )}
@@ -251,8 +260,11 @@ export default function UserTransactions() {
               )}
             </>
           )}
-
+          <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '0.25rem' }}>
+              ID: {tx.id}
+            </div>
           <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>By: {tx.createdBy}</p>
+
         </div>
       ))}
 

@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast'
 export default function UserDashboard() {
   const { user, setUser } = useContext(AuthContext)
   const [recentTx, setRecentTx] = useState([])
+  const [relatedMap, setRelatedMap] = useState({})
   const navigate = useNavigate()
 
   const fetchRecentTransactions = async () => {
@@ -19,6 +20,7 @@ export default function UserDashboard() {
       toast.error(err.response?.data?.error || 'Failed to load recent transactions')
     }
   }
+
   const refreshUser = async () => {
     try {
       const res = await axios.get('/users/me')
@@ -27,20 +29,43 @@ export default function UserDashboard() {
       toast.error('Failed to refresh user profile')
     }
   }
-  
 
   useEffect(() => {
     fetchRecentTransactions()
     refreshUser()
   }, [])
 
+  useEffect(() => {
+    const missing = recentTx.filter(tx => tx.relatedId && !relatedMap[tx.relatedId])
+    missing.forEach(async (tx) => {
+      try {
+        const res = await axios.get(`/users/id/${tx.relatedId}`)
+        setRelatedMap(prev => ({ ...prev, [tx.relatedId]: res.data.utorid }))
+      } catch {
+        setRelatedMap(prev => ({ ...prev, [tx.relatedId]: 'Unknown' }))
+      }
+    })
+  }, [recentTx])
+
   const typeColor = {
-    purchase: '#e0f7ff',
-    redemption: '#f0fff0',
-    transfer: '#fff0f0',
-    adjustment: '#f5f5f5',
-    event: '#f9f9ff'
+    transfer: '#e0f7ff',
+    redemption: '#fff0f0',
+    purchase: '#f9f9f9',
+    adjustment: '#fefae0',
+    event: '#f0fff4'
   }
+
+  const renderRelated = (tx) => {
+    if (!tx.relatedId) return null
+  
+    if (tx.type === 'transfer') {
+      const label = tx.relatedId !== user.id ? 'From' : 'To'
+      return <p><strong>{label}:</strong> {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}</p>
+    }
+  
+    return <p><strong>Related:</strong> {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}</p>
+  }
+  
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: '700px', margin: '0 auto' }}>
@@ -59,15 +84,12 @@ export default function UserDashboard() {
         <p><strong>Status:</strong> {user?.verified ? 'Verified' : 'Not Verified'}</p>
       </div>
 
-      <div
-      style={{
+      <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr',
         gap: '1rem',
         marginBottom: '2rem'
-      }}
-      className="action-buttons"
-      >
+      }}>
         <button onClick={() => navigate('/user/qr')}>Show My QR Code</button>
         <button onClick={() => navigate('/user/transfer')}>Transfer Points</button>
         <button onClick={() => navigate('/user/redeem')}>Redeem Points</button>
@@ -93,9 +115,24 @@ export default function UserDashboard() {
               <strong>{tx.type.toUpperCase()}</strong>
               {tx.amount !== undefined && <span>{tx.amount} pts</span>}
             </div>
-            {tx.relatedId && <p>Related ID: {tx.relatedId}</p>}
+            {tx.relatedId && (
+            <p>
+              <strong>
+                {tx.type === 'transfer'
+                  ? tx.amount < 0
+                    ? 'To'
+                    : 'From'
+                  : 'Related'}
+                :
+              </strong>{' '}
+              {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}
+            </p>
+          )}
+
+            
             {tx.promotionId && <p>Promo ID: {tx.promotionId}</p>}
             {tx.remark && <p>Note: {tx.remark}</p>}
+            
             {tx.type === 'redemption' && (
               <div style={{
                 marginTop: '0.5rem',
@@ -111,6 +148,9 @@ export default function UserDashboard() {
                 {tx.processed ? 'Processed' : 'Pending'}
               </div>
             )}
+            <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '0.25rem' }}>
+              ID: {tx.id}
+            </div>
             <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>By: {tx.createdBy}</p>
           </div>
         ))

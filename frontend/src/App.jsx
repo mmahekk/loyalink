@@ -20,6 +20,11 @@ import EventDetail from './pages/regular/EventDetail'
 import UserTransactions from './pages/regular/UserTransactions'
 import RoleSelector from './pages/RoleSelector'
 import ManagerDashboard from './pages/manager/ManagerDashboard'
+import ManagerUserList from './pages/manager/ManagerUserList'
+import ManagerUserDetail from './pages/manager/ManagerUserDetail'
+import ManagerTransactionList from './pages/manager/ManagerTransactionList'
+import ManagerTransactionDetail from './pages/manager/ManagerTransactionDetail'
+import ManagerCreateAdjustment from './pages/manager/ManagerCreateAdjustment'
 //import CashierDashboard from './pages/cashier/CashierDashboard'
 
 export default function App() {
@@ -36,8 +41,8 @@ export default function App() {
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
         <Route path="/success" element={<Success />} />
-        
-        <Route path="/select-role" element={<RoleSelector />} />
+    
+        {/* <Route path="/select-role" element={<RoleSelector />} /> */}
         <Route
           path="/user"
           element={
@@ -120,10 +125,58 @@ export default function App() {
           }
         />
         <Route
+          path="/select-role"
+          element={
+            <ProtectedRoute roles={['cashier','manager', 'superuser']}>
+              <RoleSelector/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/manager"
           element={
             <ProtectedRoute roles={['manager', 'superuser']}>
               <ManagerDashboard/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/users"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerUserList/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/users/:userId"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerUserDetail/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/transactions"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerTransactionList/>
+            </ProtectedRoute>
+          }
+        />
+       <Route
+          path="/manager/transactions/:transactionId"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerTransactionDetail/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/adjustments/create"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerCreateAdjustment/>
             </ProtectedRoute>
           }
         />

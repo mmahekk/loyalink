@@ -18,6 +18,7 @@ export default function RoleSelector() {
 
   const handleSelect = (role) => {
     setActiveRole(role)
+    localStorage.setItem('activeRole', role)
     navigate(`/${role === 'regular' ? 'user' : role}`)
   }
 

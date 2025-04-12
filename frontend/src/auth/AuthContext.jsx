@@ -8,7 +8,18 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [token, setToken] = useState(localStorage.getItem('token'))
     const [loaded, setLoaded] = useState(false);
-    const [activeRole, setActiveRole] = useState(null);
+    const [activeRole, _setActiveRole] = useState(() => {
+      return localStorage.getItem('activeRole') || null
+    })
+    
+    const setActiveRole = (role) => {
+      _setActiveRole(role)
+      if (role) {
+        localStorage.setItem('activeRole', role)
+      } else {
+        localStorage.removeItem('activeRole')
+      }
+    }
     const navigate = useNavigate()
   
     const login = async (utorid, password) => {
@@ -44,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
       setUser(null)
       setToken(null)
+      setActiveRole(null)
       localStorage.removeItem('token')
       navigate('/login')
     }
