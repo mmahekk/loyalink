@@ -25,7 +25,9 @@ import ManagerUserDetail from './pages/manager/ManagerUserDetail'
 import ManagerTransactionList from './pages/manager/ManagerTransactionList'
 import ManagerTransactionDetail from './pages/manager/ManagerTransactionDetail'
 import ManagerCreateAdjustment from './pages/manager/ManagerCreateAdjustment'
-//import CashierDashboard from './pages/cashier/CashierDashboard'
+import CashierDashboard from './pages/cashier/CashierDashboard'
+import CashierCreateTransaction from './pages/cashier/CashierCreateTransaction'
+import CashierProcessRedemption from './pages/cashier/CashierProcessRedemption'
 
 export default function App() {
   const location = useLocation()
@@ -180,6 +182,33 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/cashier"
+          element={
+            <ProtectedRoute roles={['cashier', 'superuser']}>
+              <CashierDashboard/>
+            </ProtectedRoute>
+          }
+          />
+
+        <Route
+          path="/cashier/transactions"
+          element={
+            <ProtectedRoute roles={['cashier', 'superuser']}>
+              <CashierCreateTransaction/>
+            </ProtectedRoute>
+          }
+          />
+        
+        <Route
+          path="/cashier/process-redemption"
+          element={
+            <ProtectedRoute roles={['cashier', 'superuser']}>
+              <CashierProcessRedemption/>
+            </ProtectedRoute>
+          }
+          />
+          
 
      </Routes>
     </>
