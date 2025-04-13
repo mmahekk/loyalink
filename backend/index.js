@@ -905,7 +905,8 @@ app.get('/users/me/transactions', authenticate,  async (req, res) => {
         relatedId: tx.relatedId ?? undefined,
         promotionIds: tx.promotions.map(p => p.promotionId),
         remark: tx.remark || "",
-        createdBy: tx.createdBy.utorid
+        createdBy: tx.createdBy.utorid,
+        processed: tx.processed
       }));
 
       return res.json({
@@ -2427,7 +2428,7 @@ app.get('/transactions/:transactionId', authenticate, async (req, res) => {
         promotionIds,
         suspicious: tx.suspicious,
         remark: tx.remark,
-        createBy: tx.createdBy ? tx.createdBy.utorid : null,
+        createdBy: tx.createdBy ? tx.createdBy.utorid : null,
         relatedId: tx.relatedId
       };
       if (redeemedValue !== undefined) {
