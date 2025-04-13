@@ -36,7 +36,7 @@ export default function ProcessRedemption() {
           marginBottom: '1rem',
           background: 'none',
           border: 'none',
-          color: '#1C2D5A',
+          color: '#4A148C',
           fontWeight: 500,
           cursor: 'pointer'
         }}
@@ -44,7 +44,7 @@ export default function ProcessRedemption() {
         ← Back to Dashboard
       </button>
 
-      <h2 style={{ marginBottom: '1rem' }}>Process Redemption</h2>
+      <h2 style={{ marginBottom: '1rem', textAlign: 'center' }}>Process Redemption</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', maxWidth: '500px' }}>
         <input
           type="number"
@@ -58,7 +58,7 @@ export default function ProcessRedemption() {
           disabled={submitting}
           style={{
             padding: '0.6rem 1.2rem',
-            background: '#1C2D5A',
+            background: '#4A148C',
             color: 'white',
             border: 'none',
             borderRadius: '6px',

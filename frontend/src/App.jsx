@@ -41,6 +41,7 @@ import ManagerPromotions from './pages/manager/ManagerPromotions'
 import ManagerCreatePromotion from './pages/manager/ManagerCreatePromotion'
 import ManagerPromotionList from './pages/manager/ManagerPromotionList'
 import ManagerUpdatePromotion from './pages/manager/ManagerUpdatePromotion'
+import CashierRegisterUser from './pages/cashier/CashierRegisterUser'
 
 export default function App() {
   const location = useLocation()
@@ -324,7 +325,15 @@ export default function App() {
               <CashierProcessRedemption/>
             </ProtectedRoute>
           }
-          />
+        />
+        <Route
+          path="/cashier/register"
+          element={
+            <ProtectedRoute roles={['cashier', 'superuser']}>
+              <CashierRegisterUser />
+            </ProtectedRoute>
+          }
+        />
           
 
      </Routes>

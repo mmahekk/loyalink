@@ -45,7 +45,7 @@ export default function CreateTransaction() {
     try {
       const res = await axios.post('/transactions', payload)
       toast.success(`Transaction created (ID: ${res.data.id})`)
-      navigate('/cashier')  // or wherever you want to redirect
+      navigate('/cashier')  
     } catch (err) {
       toast.error(err.response?.data?.error || 'Transaction creation failed')
     } finally {
@@ -54,7 +54,7 @@ export default function CreateTransaction() {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+    <div style={{ padding: '2rem' }}>
       <button
         onClick={() => navigate('/cashier')}
         style={{
@@ -69,7 +69,7 @@ export default function CreateTransaction() {
         ← Back to Dashboard
       </button>
 
-      <h2 style={{ marginBottom: '1rem' }}>Create Purchase Transaction</h2>
+      <h2 style={{ marginBottom: '1rem', textAlign: 'center' }}>Create Purchase Transaction</h2>
 
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
         <input
@@ -105,7 +105,7 @@ export default function CreateTransaction() {
           disabled={submitting}
           style={{
             padding: '0.6rem 1.2rem',
-            background: '#1C2D5A',
+            background: '#4A148C',
             color: 'white',
             border: 'none',
             borderRadius: '6px',

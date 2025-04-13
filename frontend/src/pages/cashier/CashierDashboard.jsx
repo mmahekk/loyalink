@@ -4,40 +4,49 @@ import { AuthContext } from '../../auth/AuthContext'
 import { getClearance } from '../../utils/roles'
 
 export default function CashierDashboard() {
-  // accessing the current user from AuthContext
   const { user } = useContext(AuthContext) 
-  // hook to navigate to different routes
   const navigate = useNavigate()
-  // checking the user's clearance level
   const clearance = getClearance(user.role)
 
-  // redirect if not logged in or not a cashier
   if (!user || clearance < 1) return <Navigate to="/select-role" />
 
-  // otherwise render the dashboard
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '700px', margin: '0 auto' }}>  
-     
-     {/* Displaying a welcome message for the cashier */}
-
-      <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>
+    <div style={{ padding: '2rem' }}>
+      <h2 style={{ fontSize: '1.6rem', marginBottom: '1.5rem', textAlign: 'center' }}>
         Welcome, {user?.name || 'Cashier'}!
-      </h1>
+      </h2>
 
-      {/*Buttons for creating a transaction and processing a redemption*/}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: '1rem'
-      }}>
-        <button onClick={() => navigate('/cashier/transactions')}>
-          Create Transaction
-        </button>
-        <button onClick={() => navigate('/cashier/process-redemption')}>
-          Process Redemption
-        </button>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '1.5rem',
+          maxWidth: '800px',
+          margin: '0 auto'
+        }}
+      >
+        <DashboardTile title="Create Transaction" onClick={() => navigate('/cashier/transactions')} />
+        <DashboardTile title="Process Redemption" onClick={() => navigate('/cashier/process-redemption')} />
+        <DashboardTile title="Register New User" onClick={() => navigate('/cashier/register')} />
       </div>
+    </div>
+  )
+}
+
+function DashboardTile({ title, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: '#4A148C', // matching navbar purple
+        color: 'white',
+        padding: '1.2rem',
+        borderRadius: '10px',
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease-in-out'
+      }}
+    >
+      <h3 style={{ fontSize: '1.3rem', textAlign: 'center' }}>{title}</h3>
     </div>
   )
 }
