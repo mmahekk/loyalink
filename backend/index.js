@@ -389,6 +389,7 @@ app.get('/users/me', authenticate, authorize(["regular","cashier","manager","sup
                 lastLogin: true,
                 verified: true,
                 avatarUrl: true,
+                eventOrganizers: true,
                 promotions: {
                     include: {
                         promotion: true 
@@ -420,7 +421,8 @@ app.get('/users/me', authenticate, authorize(["regular","cashier","manager","sup
             lastLogin: user.lastLogin ? user.lastLogin.toISOString() : null,
             verified: user.verified,
             avatarUrl: user.avatarUrl ? `/uploads/avatars/${user.utorid}.png` : null,
-            promotions: filteredPromotions
+            promotions: filteredPromotions,
+            isOrganizer: user.eventOrganizers.length > 0
         });
 
     } catch (err) {
@@ -2993,6 +2995,44 @@ app.delete('/promotions/:promotionId', authenticate, authorize(["manager", "supe
         console.error("Error deleting promotion:", err);
         return res.status(500).json({ error: "Internal Server Error" });
     }
+});
+
+app.get('/organizer/events', authenticate, async (req, res) => {
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        organizers: {
+          some: { userId: req.user.id }
+        }
+      },
+      orderBy: { startTime: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        startTime: true,
+        endTime: true,
+        capacity: true,
+        pointsRemain: true,
+        pointsAwarded: true,
+        published: true,
+        _count: {
+          select: {
+            guests: true
+          }
+        }
+      }
+    });
+
+    return res.json(events.map(e => ({
+      ...e,
+      startTime: e.startTime.toISOString(),
+      endTime: e.endTime.toISOString()
+    })));
+  } catch (err) {
+    console.error("Error fetching organizer events:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 
