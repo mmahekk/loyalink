@@ -28,6 +28,19 @@ import ManagerCreateAdjustment from './pages/manager/ManagerCreateAdjustment'
 import CashierDashboard from './pages/cashier/CashierDashboard'
 import CashierCreateTransaction from './pages/cashier/CashierCreateTransaction'
 import CashierProcessRedemption from './pages/cashier/CashierProcessRedemption'
+import ManagerEvents from './pages/manager/ManagerEvents'
+import ManagerCreateEvent from './pages/manager/ManagerCreateEvent'
+import ManagerEventList from './pages/manager/ManagerEventsList'
+import ManagerDeleteEvent from './pages/manager/ManagerDeleteEvent'
+import ManagerUpdateEvent from './pages/manager/ManagerUpdateEvent'
+import ManagerAddOrganizer from './pages/manager/ManagerAddOrganizer'
+import ManagerAddGuest from './pages/manager/ManagerAddGuest'
+import ManagerRemoveGuest from './pages/manager/ManagerRemoveGuest'
+import ManagerRewardGuest from './pages/manager/ManagerRewardGuests'
+import ManagerPromotions from './pages/manager/ManagerPromotions'
+import ManagerCreatePromotion from './pages/manager/ManagerCreatePromotion'
+import ManagerPromotionList from './pages/manager/ManagerPromotionList'
+import ManagerUpdatePromotion from './pages/manager/ManagerUpdatePromotion'
 
 export default function App() {
   const location = useLocation()
@@ -151,6 +164,22 @@ export default function App() {
           }
         />
         <Route
+          path="/manager/events"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerEvents/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/create"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerCreateEvent/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/manager/users/:userId"
           element={
             <ProtectedRoute roles={['manager', 'superuser']}>
@@ -179,6 +208,94 @@ export default function App() {
           element={
             <ProtectedRoute roles={['manager', 'superuser']}>
               <ManagerCreateAdjustment/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/view"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerEventList/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/delete"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerDeleteEvent/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/update"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerUpdateEvent/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/organizers"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerAddOrganizer/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/add-guest"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerAddGuest/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/remove-guest"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerRemoveGuest/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/events/reward"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerRewardGuest/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/promotions"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerPromotions/>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/manager/promotions/create"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerCreatePromotion/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/promotions/view"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerPromotionList/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/promotions/update/:id"
+          element={
+            <ProtectedRoute roles={['manager', 'superuser']}>
+              <ManagerUpdatePromotion/>
             </ProtectedRoute>
           }
         />

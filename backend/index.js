@@ -1105,10 +1105,12 @@ app.get('/events', authenticate, authorize(["regular", "cashier", "manager", "su
       const where = {};
 
       if (!["manager", "superuser"].includes(req.user.role)) {
-          where.published = true;
-      } else if (publishedBool !== undefined) {
-          where.published = publishedBool;
-      }
+        where.published = true;
+    } else {
+        if (publishedBool !== undefined) {
+            where.published = publishedBool;
+        }
+    }
 
       if (name) {
           where.name = { contains: name, mode: "insensitive" };
