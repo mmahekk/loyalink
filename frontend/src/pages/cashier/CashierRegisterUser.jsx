@@ -40,7 +40,7 @@ export default function CashierRegisterUser() {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+    <div style={{ padding: '2rem' }}>
       <button
         onClick={() => navigate('/cashier')}
         style={{
@@ -55,7 +55,7 @@ export default function CashierRegisterUser() {
         ← Back to Dashboard
       </button>
 
-      <h2>Register New User</h2>
+      <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Register User</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
         <input name="utorid" placeholder="UTORid (8 chars)" value={form.utorid} onChange={handleChange} required />
         <input name="name" placeholder="Full Name" value={form.name} onChange={handleChange} required />

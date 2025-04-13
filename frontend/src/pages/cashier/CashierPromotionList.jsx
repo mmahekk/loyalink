@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import axios from '../../api/axiosInstance'
 import { toast } from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+
 
 export default function CashierPromotionList() {
   const [promotions, setPromotions] = useState([])
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
   const fetchPromotions = async () => {
     setLoading(true)
@@ -23,8 +26,25 @@ export default function CashierPromotionList() {
   }, [])
 
   return (
+    <>
+    <div style={{ padding: '2rem' }}>
+      <button
+        onClick={() => navigate('/cashier')}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#1C2D5A',
+          fontWeight: 500,
+          cursor: 'pointer',
+          fontSize: '1rem'
+        }}
+      >
+        ← Back to Dashboard
+      </button>
+    </div>
+
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
-      <h1>All Promotions</h1>
+      <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>All Promotions</h2>
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -52,5 +72,6 @@ export default function CashierPromotionList() {
         ))
       )}
     </div>
-  )
+  </>
+)
 }
