@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "createsuperuser": "node  prisma/createsu.js clive123 clive.su@mail.utoronto.ca SuperUser123!",
-    "postinstall": "prisma generate && prisma db push && node prisma/seed.js",
+    "postinstall": "prisma generate && prisma db push && node seed.js",
     "clean": "rm -rf prisma/dev.db* node_modules package-lock.json prisma/migrations/"
   },
   "dependencies": {
