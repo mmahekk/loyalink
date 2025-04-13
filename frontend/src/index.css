@@ -49,6 +49,10 @@ button:hover {
 .link-button:hover {
   color: #0059c1;
 }
+* {
+  box-sizing: border-box;
+}
+
 
 @media (max-width: 400px) {
   form {

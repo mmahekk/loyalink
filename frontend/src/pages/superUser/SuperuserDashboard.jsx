@@ -5,7 +5,7 @@ import { useNavigate, Navigate } from 'react-router-dom'
 import { getClearance } from '../../utils/roles'
 import cardStyles from '../DashboardCard.module.css'
 
-export default function ManagerDashboard() {
+export default function SuperuserDashboard() {
   const { user, token } = useContext(AuthContext)
   const [stats, setStats] = useState({
     eventCount: 0,
@@ -31,43 +31,44 @@ export default function ManagerDashboard() {
           userCount: userRes.data.count || userRes.data.length || 0
         })
       } catch (err) {
-        console.error('Failed to load manager stats:', err)
+        console.error('Failed to load superuser stats:', err)
       }
     }
 
     fetchStats()
   }, [token])
 
-  if (!user || clearance < 2) return <Navigate to="/select-role" />
+  if (!user || clearance < 3) return <Navigate to="/select-role" />
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2 style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>Manager Overview</h2>
+      <h2 style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>Superuser Overview</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <OverviewTile title="Events" value={stats.eventCount} onClick={() => navigate('/manager/events')} />
         <OverviewTile title="Promotions" value={stats.promotionCount} onClick={() => navigate('/manager/promotions')} />
         <OverviewTile title="Users" value={stats.userCount} onClick={() => navigate('/manager/users')} />
-        <OverviewTile title="Transactions" value=" View All"  onClick={() => navigate('/manager/transactions')} />
+        <OverviewTile title="Transactions" value="View All" onClick={() => navigate('/manager/transactions')} />
       </div>
     </div>
   )
 }
 
 function OverviewTile({ title, value, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className={`${cardStyles.card} ${cardStyles.manager}`}
-      style={{
-        padding: '1.2rem',
-        borderRadius: '10px',
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 0.2s ease-in-out'
-      }}
-    >
-      <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>{title}</h3>
-      <div style={{ fontSize: '1.2rem' }}>{value}</div>
-    </div>
-  )
-}
+    return (
+      <div
+        onClick={onClick}
+        className={`${cardStyles.card} ${cardStyles.superuser}`}
+        style={{
+          padding: '1.2rem',
+          borderRadius: '10px',
+          cursor: onClick ? 'pointer' : 'default',
+          transition: 'transform 0.2s ease-in-out'
+        }}
+      >
+        <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>{title}</h3>
+        <div style={{ fontSize: '1.2rem' }}>{value}</div>
+      </div>
+    )
+  }
+  

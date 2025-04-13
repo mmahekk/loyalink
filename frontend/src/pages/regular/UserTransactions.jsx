@@ -15,7 +15,6 @@ export default function UserTransactions() {
   const { user } = useContext(AuthContext)
   const [showFilters, setShowFilters] = useState(false)
 
-
   const [filters, setFilters] = useState({
     type: searchParams.get('type') || '',
     relatedId: searchParams.get('relatedId') || '',
@@ -27,15 +26,11 @@ export default function UserTransactions() {
 
   const [orderBy, setOrderBy] = useState(searchParams.get('orderBy') || 'newest')
 
-  const fetchTransactions = async (pageNum = 1, resolvedFilters = null) => {
+  const fetchTransactions = async (pageNum = 1, overrideParams = null) => {
     try {
-      const params = resolvedFilters || {
-        page: pageNum,
-        limit: 5,
-        orderBy,
-        ...filters
-      }
-      Object.keys(params).forEach(k => params[k] === '' && delete params[k])
+      const params = overrideParams || Object.fromEntries(searchParams)
+      params.page = pageNum
+      params.limit = 5
 
       const res = await axios.get('/users/me/transactions', { params })
       setTransactions(res.data.results)
@@ -52,40 +47,51 @@ export default function UserTransactions() {
   }, [orderBy])
 
   useEffect(() => {
-    const params = Object.fromEntries(searchParams.entries())
-    setFilters({
-      type: params.type || '',
-      relatedId: params.relatedId || '',
-      relatedUtorid: '', // not stored in searchParams
-      promotionId: params.promotionId || '',
-      amount: params.amount || '',
-      operator: params.operator || ''
-    })
-    setOrderBy(params.orderBy || 'newest')
-    fetchTransactions(parseInt(params.page || '1'), params)
-  }, [searchParams])
+    const query = Object.fromEntries([...searchParams])
+    setFilters(prev => ({ ...prev, ...query }))
+    fetchTransactions(parseInt(query.page || '1', 10))
+  }, [])
 
-  
+  useEffect(() => {
+    const missing = transactions.filter(tx => tx.relatedId && !relatedMap[tx.relatedId])
+    missing.forEach(async (tx) => {
+      try {
+        const res = await axios.get(`/users/id/${tx.relatedId}`)
+        setRelatedMap(prev => ({ ...prev, [tx.relatedId]: res.data.utorid }))
+      } catch {
+        setRelatedMap(prev => ({ ...prev, [tx.relatedId]: 'Unknown' }))
+      }
+    })
+  }, [transactions])
+
   const handleFilterSubmit = async (e) => {
     e.preventDefault()
-    const resolvedFilters = { ...filters }
+    const params = { ...filters, page: 1, orderBy }
   
-    // Convert relatedUtorid → relatedId
-    if (filters.relatedUtorid) {
+    // Resolve relatedUtorid to relatedId only if type is specified
+    if (filters.relatedUtorid && filters.type) {
       try {
         const res = await axios.get(`/users/utorid/${filters.relatedUtorid}`)
-        resolvedFilters.relatedId = res.data.id
+        params.relatedId = res.data.id
       } catch {
         toast.error('Related UTORid not found')
         return
       }
     }
   
-    delete resolvedFilters.relatedUtorid
-    resolvedFilters.page = 1
-    resolvedFilters.orderBy = orderBy
-    setSearchParams(resolvedFilters)
-    fetchTransactions(1, resolvedFilters)
+    // relatedId only valid with type
+    if (!filters.type) {
+      delete params.relatedId
+    }
+  
+    delete params.relatedUtorid
+  
+    Object.keys(params).forEach(k => {
+      if (params[k] === '') delete params[k]
+    })
+  
+    setSearchParams(params)
+    fetchTransactions(1, params)
   }
 
   const handleClearFilters = () => {
@@ -228,9 +234,9 @@ export default function UserTransactions() {
 
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
-          <button disabled={page === 1} onClick={() => fetchTransactions(page - 1)}>Prev</button>
+          <button onClick={() => fetchTransactions(page - 1)} disabled={page === 1}>Prev</button>
           <span>Page {page} of {totalPages}</span>
-          <button disabled={page === totalPages} onClick={() => fetchTransactions(page + 1)}>Next</button>
+          <button onClick={() => fetchTransactions(page + 1)} disabled={page === totalPages}>Next</button>
         </div>
       )}
     </div>

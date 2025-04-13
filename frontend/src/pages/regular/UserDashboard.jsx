@@ -3,6 +3,7 @@ import { AuthContext } from '../../auth/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import axios from '../../api/axiosInstance'
 import { toast } from 'react-hot-toast'
+import cardStyles from '../DashboardCard.module.css'
 
 export default function UserDashboard() {
   const { user, setUser } = useContext(AuthContext)
@@ -47,25 +48,14 @@ export default function UserDashboard() {
     })
   }, [recentTx])
 
-  const typeColor = {
-    transfer: '#e0f7ff',
-    redemption: '#fff0f0',
-    purchase: '#f9f9f9',
-    adjustment: '#fefae0',
-    event: '#f0fff4'
-  }
-
   const renderRelated = (tx) => {
     if (!tx.relatedId) return null
-  
     if (tx.type === 'transfer') {
       const label = tx.relatedId !== user.id ? 'From' : 'To'
       return <p><strong>{label}:</strong> {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}</p>
     }
-  
     return <p><strong>Related:</strong> {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}</p>
   }
-  
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: '700px', margin: '0 auto' }}>
@@ -103,36 +93,26 @@ export default function UserDashboard() {
         <p>No recent transactions</p>
       ) : (
         recentTx.map(tx => (
-          <div key={tx.id} style={{
-            background: typeColor[tx.type] || '#f4f4f4',
-            border: '1px solid #ccc',
-            borderRadius: '10px',
-            padding: '1rem 1.25rem',
-            marginBottom: '1rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-          }}>
+          <div key={tx.id} className={`${cardStyles.card} ${cardStyles[tx.type] || ''}`}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <strong>{tx.type.toUpperCase()}</strong>
               {tx.amount !== undefined && <span>{tx.amount} pts</span>}
             </div>
             {tx.relatedId && (
-            <p>
-              <strong>
-                {tx.type === 'transfer'
-                  ? tx.amount < 0
-                    ? 'To'
-                    : 'From'
-                  : 'Related'}
-                :
-              </strong>{' '}
-              {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}
-            </p>
-          )}
-
-            
+              <p>
+                <strong>
+                  {tx.type === 'transfer'
+                    ? tx.amount < 0
+                      ? 'To'
+                      : 'From'
+                    : 'Related'}
+                  :
+                </strong>{' '}
+                {relatedMap[tx.relatedId] || `ID ${tx.relatedId}`}
+              </p>
+            )}
             {tx.promotionId && <p>Promo ID: {tx.promotionId}</p>}
             {tx.remark && <p>Note: {tx.remark}</p>}
-            
             {tx.type === 'redemption' && (
               <div style={{
                 marginTop: '0.5rem',

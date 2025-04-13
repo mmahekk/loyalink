@@ -58,6 +58,7 @@ export default function App() {
   return (
     <>
       {user && !hideNav && <NavBar />}
+      <div style={{ paddingTop: '5rem', paddingInline: '1rem',  maxWidth: '100%', overflowX: 'hidden' }}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -349,8 +350,7 @@ export default function App() {
             </ProtectedRoute>
           }
           />
-          
-        />
+        
         <Route
           path="/cashier/register"
           element={
@@ -411,6 +411,7 @@ export default function App() {
         />
 
      </Routes>
+     </div>
     </>
   )
 }

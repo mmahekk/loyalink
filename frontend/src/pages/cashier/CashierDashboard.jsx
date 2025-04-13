@@ -2,14 +2,13 @@ import { useContext } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { AuthContext } from '../../auth/AuthContext'
 import { getClearance } from '../../utils/roles'
+import cardStyles from '../DashboardCard.module.css'
 
 export default function CashierDashboard() {
-  const { user } = useContext(AuthContext) 
+  const { user, activeRole } = useContext(AuthContext)
   const navigate = useNavigate()
-  const { activeRole } = useContext(AuthContext)
   const role = activeRole || user.role
   const clearance = getClearance(role)
-  
 
   if (!user || clearance < 1) return <Navigate to="/select-role" />
 
@@ -31,7 +30,6 @@ export default function CashierDashboard() {
         <DashboardTile title="Register New User" onClick={() => navigate('/cashier/register')} />
         <DashboardTile title="View Events" onClick={() => navigate('/cashier/events')} />
         <DashboardTile title="View Promotions" onClick={() => navigate('/cashier/promotions')} />
-
       </div>
     </div>
   )
@@ -41,9 +39,8 @@ function DashboardTile({ title, onClick }) {
   return (
     <div
       onClick={onClick}
+      className={`${cardStyles.card} ${cardStyles.cashier}`}
       style={{
-        background: '#4A148C', // matching navbar purple
-        color: 'white',
         padding: '1.2rem',
         borderRadius: '10px',
         cursor: 'pointer',
@@ -54,3 +51,4 @@ function DashboardTile({ title, onClick }) {
     </div>
   )
 }
+
