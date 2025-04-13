@@ -15,6 +15,10 @@ export default function RoleSelector() {
   if (clearance >= 1) availableRoles.push('cashier')
   if (clearance >= 2) availableRoles.push('manager')
   if (clearance >= 3) availableRoles.push('superuser')
+  if (user?.isOrganizer) {
+    availableRoles.push('organizer')
+  }
+  
 
   const handleSelect = (role) => {
     setActiveRole(role)

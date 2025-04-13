@@ -42,6 +42,9 @@ import ManagerCreatePromotion from './pages/manager/ManagerCreatePromotion'
 import ManagerPromotionList from './pages/manager/ManagerPromotionList'
 import ManagerUpdatePromotion from './pages/manager/ManagerUpdatePromotion'
 import CashierRegisterUser from './pages/cashier/CashierRegisterUser'
+import CashierEventList from './pages/cashier/CashierEventList'
+import CashierPromotionList from './pages/cashier/CashierPromotionList'
+import OrganizerDashboard from './pages/organizer/OrganizerDashboard'
 
 export default function App() {
   const location = useLocation()
@@ -331,6 +334,30 @@ export default function App() {
           element={
             <ProtectedRoute roles={['cashier', 'superuser']}>
               <CashierRegisterUser />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cashier/events"
+          element={
+            <ProtectedRoute roles={['cashier', 'superuser']}>
+              <CashierEventList/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cashier/promotions"
+          element={
+            <ProtectedRoute roles={['cashier', 'superuser']}>
+              <CashierPromotionList/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organizer"
+          element={
+            <ProtectedRoute roles={['organizer']}>
+              <OrganizerDashboard/>
             </ProtectedRoute>
           }
         />

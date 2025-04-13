@@ -32,7 +32,10 @@ export const AuthProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` }
       })
     
-      setUser(profile.data)
+      setUser({
+        ...profile.data,
+        isOrganizer: profile.data.eventOrganizers && profile.data.eventOrganizers.length > 0
+      })
     
       switch (profile.data.role) {
         case 'regular':
@@ -65,7 +68,13 @@ export const AuthProvider = ({ children }) => {
         axios.get('/users/me', {
           headers: { Authorization: `Bearer ${token}` }
         })
-        .then(res => setUser(res.data))
+        .then(res => {
+          setUser({
+            ...res.data,
+            isOrganizer: res.data.eventOrganizers && res.data.eventOrganizers.length > 0
+          })
+        })
+        
         .catch(() => logout())
         .finally(()=> setLoaded(true))
       }else{

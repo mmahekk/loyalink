@@ -6,7 +6,10 @@ import { getClearance } from '../../utils/roles'
 export default function CashierDashboard() {
   const { user } = useContext(AuthContext) 
   const navigate = useNavigate()
-  const clearance = getClearance(user.role)
+  const { activeRole } = useContext(AuthContext)
+  const role = activeRole || user.role
+  const clearance = getClearance(role)
+  
 
   if (!user || clearance < 1) return <Navigate to="/select-role" />
 
@@ -21,13 +24,14 @@ export default function CashierDashboard() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '1.5rem',
-          maxWidth: '800px',
-          margin: '0 auto'
         }}
       >
         <DashboardTile title="Create Transaction" onClick={() => navigate('/cashier/transactions')} />
         <DashboardTile title="Process Redemption" onClick={() => navigate('/cashier/process-redemption')} />
         <DashboardTile title="Register New User" onClick={() => navigate('/cashier/register')} />
+        <DashboardTile title="View Events" onClick={() => navigate('/cashier/events')} />
+        <DashboardTile title="View Promotions" onClick={() => navigate('/cashier/promotions')} />
+
       </div>
     </div>
   )
