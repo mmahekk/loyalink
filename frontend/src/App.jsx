@@ -28,6 +28,7 @@ import ManagerCreateAdjustment from './pages/manager/ManagerCreateAdjustment'
 import CashierDashboard from './pages/cashier/CashierDashboard'
 import CashierCreateTransaction from './pages/cashier/CashierCreateTransaction'
 import CashierProcessRedemption from './pages/cashier/CashierProcessRedemption'
+import SuperuserDashboard from './pages/superUser/SuperuserDashboard'
 import ManagerEvents from './pages/manager/ManagerEvents'
 import ManagerCreateEvent from './pages/manager/ManagerCreateEvent'
 import ManagerEventList from './pages/manager/ManagerEventsList'
@@ -67,6 +68,14 @@ export default function App() {
         {/* <Route path="/select-role" element={<RoleSelector />} /> */}
         <Route
           path="/user"
+          element={
+            <ProtectedRoute roles={['regular', 'cashier', 'manager', 'superuser']}>
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/regular"
           element={
             <ProtectedRoute roles={['regular', 'cashier', 'manager', 'superuser']}>
               <UserDashboard />
@@ -331,6 +340,16 @@ export default function App() {
               <CashierProcessRedemption/>
             </ProtectedRoute>
           }
+          />
+          <Route
+          path="/superuser"
+          element={
+            <ProtectedRoute roles={['superuser']}>
+              <SuperuserDashboard/>
+            </ProtectedRoute>
+          }
+          />
+          
         />
         <Route
           path="/cashier/register"

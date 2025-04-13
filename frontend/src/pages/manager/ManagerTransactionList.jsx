@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from '../../api/axiosInstance'
 import { toast } from 'react-hot-toast'
 
@@ -10,33 +10,48 @@ export default function ManagerTransactionList() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   const [filters, setFilters] = useState({
     name: '',
     type: '',
+    suspicious: '',
     promotionId: '',
     amount: '',
     operator: '',
-    suspicious: '',
     relatedUtorid: '',
     relatedId: ''
   })
-
   const [orderBy, setOrderBy] = useState('newest')
-  const navigate = useNavigate()
+
+  const applyQueryParams = async (params) => {
+    const cleanParams = { ...params }
+
+    if (params.relatedUtorid) {
+      try {
+        const res = await axios.get(`/users/utorid/${params.relatedUtorid}`)
+        cleanParams.relatedId = res.data.id
+      } catch {
+        toast.error('Related UTORid not found')
+        return
+      }
+    }
+
+    Object.keys(cleanParams).forEach(k => {
+      if (cleanParams[k] === '') delete cleanParams[k]
+    })
+
+    setSearchParams({ ...cleanParams, page: 1 })
+    fetchTransactions(1, cleanParams)
+  }
 
   const fetchTransactions = async (pageNum = 1, overrideParams = null) => {
     setLoading(true)
     try {
-      const params = overrideParams || {
-        page: pageNum,
-        limit: 10,
-        ...filters
-      }
-
-      Object.keys(params).forEach(k => {
-        if (params[k] === '') delete params[k]
-      })
+      const params = overrideParams || Object.fromEntries(searchParams)
+      params.page = pageNum
+      params.limit = 10
 
       const res = await axios.get('/transactions', { params })
 
@@ -61,40 +76,28 @@ export default function ManagerTransactionList() {
     fetchTransactions(1)
   }, [orderBy])
 
-  const handleFilterSubmit = async (e) => {
+  const handleFilterSubmit = (e) => {
     e.preventDefault()
-
-    const params = { ...filters }
-
-    // Convert relatedUtorid → relatedId
-    if (filters.relatedUtorid) {
-      try {
-        const res = await axios.get(`/users/utorid/${filters.relatedUtorid}`)
-        params.relatedId = res.data.id
-        delete params.relatedUtorid
-      } catch (err) {
-        toast.error('Related UTORid not found')
-        return
-      }
-    }
-
-    fetchTransactions(1, params)
+    applyQueryParams({ ...filters, orderBy })
   }
 
   const clearFilters = () => {
-    setFilters({
+    const cleared = {
       name: '',
       type: '',
+      suspicious: '',
       promotionId: '',
       amount: '',
       operator: '',
-      suspicious: '',
       relatedUtorid: '',
       relatedId: ''
-    })
+    }
+    setFilters(cleared)
+    setOrderBy('newest')
+    setSearchParams({})
     fetchTransactions(1)
   }
-  
+
   const typeColors = {
     transfer: '#e0f7ff',
     redemption: '#fff0f0',
@@ -109,6 +112,7 @@ export default function ManagerTransactionList() {
       <p style={{ marginBottom: '1.5rem', color: '#555' }}>
         {count} total transaction{count !== 1 ? 's' : ''}
       </p>
+
       <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
         <button
           onClick={() => setShowFilters(prev => !prev)}
@@ -145,7 +149,12 @@ export default function ManagerTransactionList() {
             value={filters.name}
             onChange={e => setFilters(f => ({ ...f, name: e.target.value }))}
           />
-
+          <input
+            type="number"
+            placeholder="Promotion ID"
+            value={filters.promotionId}
+            onChange={e => setFilters(f => ({ ...f, promotionId: e.target.value }))}
+          />
           <select
             value={filters.type}
             onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
@@ -157,7 +166,6 @@ export default function ManagerTransactionList() {
             <option value="adjustment">Adjustment</option>
             <option value="event">Event</option>
           </select>
-
           <input
             type="text"
             placeholder="Related UTORid"
@@ -165,14 +173,6 @@ export default function ManagerTransactionList() {
             onChange={e => setFilters(f => ({ ...f, relatedUtorid: e.target.value }))}
             disabled={!filters.type}
           />
-
-          <input
-            type="number"
-            placeholder="Promotion ID"
-            value={filters.promotionId}
-            onChange={e => setFilters(f => ({ ...f, promotionId: e.target.value }))}
-          />
-
           <select
             value={filters.operator}
             onChange={e => setFilters(f => ({ ...f, operator: e.target.value }))}
@@ -181,7 +181,6 @@ export default function ManagerTransactionList() {
             <option value="gte">≥</option>
             <option value="lte">≤</option>
           </select>
-
           <input
             type="number"
             placeholder="Amount"
@@ -189,7 +188,6 @@ export default function ManagerTransactionList() {
             onChange={e => setFilters(f => ({ ...f, amount: e.target.value }))}
             disabled={!filters.operator}
           />
-
           <select
             value={filters.suspicious}
             onChange={e => setFilters(f => ({ ...f, suspicious: e.target.value }))}
@@ -198,7 +196,6 @@ export default function ManagerTransactionList() {
             <option value="true">Suspicious</option>
             <option value="false">Not Suspicious</option>
           </select>
-
           <select
             value={orderBy}
             onChange={e => setOrderBy(e.target.value)}
@@ -208,7 +205,6 @@ export default function ManagerTransactionList() {
             <option value="amount_desc">Points High → Low</option>
             <option value="amount_asc">Points Low → High</option>
           </select>
-
           <div style={{ display: 'flex', gap: '1rem', gridColumn: 'span 2' }}>
             <button type="submit" style={{ flex: 1 }}>Apply</button>
             <button type="button" onClick={clearFilters} style={{ flex: 1 }}>Clear</button>
@@ -220,67 +216,64 @@ export default function ManagerTransactionList() {
         <p>Loading...</p>
       ) : (
         transactions.map(tx => (
-            <div
-                key={tx.id}
-                style={{
-                    background: typeColors[tx.type] || '#fff',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    border: '1px solid #ccc',
-                    marginBottom: '1rem',
-                    transition: 'background 0.2s ease-in-out'
-                }}
-                >
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>{tx.type.toUpperCase()}</strong>
-                    <span>{tx.amount} pts</span>
-                </div>
-
-                <p>ID: {tx.id}</p>
-                <p>Created by: {tx.createdBy?.utorid || tx.createdBy || 'Unknown'}</p>
-                {tx.remark && <p>Remark: {tx.remark}</p>}
-                {tx.suspicious && (
-                    <div style={{
-                    display: 'inline-block',
-                    padding: '0.2rem 0.6rem',
-                    background: '#ffe0e0',
-                    color: '#a10000',
-                    fontSize: '0.8rem',
-                    borderRadius: '5px'
-                    }}>
-                    Suspicious
-                    </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button
-                    onClick={() => navigate(`/manager/transactions/${tx.id}`)}
-                    style={{
-                        padding: '0.4rem 0.8rem',
-                        background: '#1C2D5A',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer'
-                    }}
-                    >
-                    View
-                    </button>
-                    <button
-                    onClick={() => navigate(`/manager/adjustments/create?relatedId=${tx.id}`)}
-                    style={{
-                        padding: '0.4rem 0.8rem',
-                        background: '#ccc',
-                        color: '#333',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer'
-                    }}
-                    >
-                    Adjust
-                    </button>
-                </div>
+          <div
+            key={tx.id}
+            style={{
+              background: typeColors[tx.type] || '#fff',
+              padding: '1rem',
+              borderRadius: '8px',
+              border: '1px solid #ccc',
+              marginBottom: '1rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <strong>{tx.type.toUpperCase()}</strong>
+              <span>{tx.amount} pts</span>
             </div>
+            <p>ID: {tx.id}</p>
+            <p>Created by: {tx.createdBy?.utorid || tx.createdBy || 'Unknown'}</p>
+            {tx.remark && <p>Remark: {tx.remark}</p>}
+            {tx.suspicious && (
+              <div style={{
+                display: 'inline-block',
+                padding: '0.2rem 0.6rem',
+                background: '#ffe0e0',
+                color: '#a10000',
+                fontSize: '0.8rem',
+                borderRadius: '5px'
+              }}>
+                Suspicious
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+              <button
+                onClick={() => navigate(`/manager/transactions/${tx.id}`)}
+                style={{
+                  padding: '0.4rem 0.8rem',
+                  background: '#1C2D5A',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                View
+              </button>
+              <button
+                onClick={() => navigate(`/manager/adjustments/create?relatedId=${tx.id}`)}
+                style={{
+                  padding: '0.4rem 0.8rem',
+                  background: '#ccc',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                Adjust
+              </button>
+            </div>
+          </div>
         ))
       )}
 

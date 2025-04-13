@@ -1,16 +1,19 @@
 import { createContext, useState, useEffect } from "react";
 import axios from '../api/axiosInstance';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('token'))
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false)
   const [activeRole, _setActiveRole] = useState(() => {
     return localStorage.getItem('activeRole') || null
   })
+
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const setActiveRole = (role) => {
     _setActiveRole(role)
@@ -21,25 +24,23 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const navigate = useNavigate()
-
   const login = async (utorid, password) => {
     const res = await axios.post('/auth/tokens', { utorid, password })
     const token = res.data.token
     setToken(token)
     localStorage.setItem('token', token)
-  
+
     const profileRes = await axios.get('/users/me', {
       headers: { Authorization: `Bearer ${token}` }
     })
-  
+
     const userData = {
       ...profileRes.data,
       isOrganizer: profileRes.data.eventOrganizers && profileRes.data.eventOrganizers.length > 0
     }
-  
+
     setUser(userData)
-  
+
     if (userData.role === 'regular') {
       navigate('/select-role')
     } else {
@@ -58,7 +59,6 @@ export const AuthProvider = ({ children }) => {
       }
     }
   }
-  
 
   const logout = () => {
     setUser(null)

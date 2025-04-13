@@ -1,35 +1,40 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from '../../api/axiosInstance'
 import { toast } from 'react-hot-toast'
 
 export default function ManagerUserList() {
   const [users, setUsers] = useState([])
+  const [count, setCount] = useState(0)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  const [filters, setFilters] = useState({
-    utorid: '',
-    role: '',
-    verified: '',
-    activated: ''
-  })
-  const [orderBy, setOrderBy] = useState('points_desc')
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  const fetchUsers = async (pageNum = 1) => {
+  const [filters, setFilters] = useState({
+    name: searchParams.get('name') || '',
+    role: searchParams.get('role') || '',
+    verified: searchParams.get('verified') || '',
+    activated: searchParams.get('activated') || '',
+    orderBy: searchParams.get('orderBy') || 'points_desc',
+  })
+
+  const fetchUsers = async (pageNum = 1, overrideParams = null) => {
     setLoading(true)
     try {
-      const params = {
+      const params = overrideParams || {
         page: pageNum,
         limit: 10,
-        ...filters,
-        orderBy
+        ...filters
       }
-      Object.keys(params).forEach(k => params[k] === '' && delete params[k])
+      Object.keys(params).forEach(k => {
+        if (params[k] === '') delete params[k]
+      })
       const res = await axios.get('/users', { params })
       setUsers(res.data.results)
+      setCount(res.data.count)
       setTotalPages(Math.ceil(res.data.count / 10))
       setPage(pageNum)
     } catch (err) {
@@ -39,7 +44,9 @@ export default function ManagerUserList() {
     }
   }
 
-  useEffect(() => { fetchUsers(1) }, [orderBy])
+  useEffect(() => {
+    fetchUsers(1)
+  }, [])
 
   const handleVerify = async (userId) => {
     try {
@@ -53,17 +60,30 @@ export default function ManagerUserList() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    fetchUsers(1)
+    const newParams = { ...filters, page: 1 }
+    setSearchParams(newParams)
+    fetchUsers(1, newParams)
   }
 
   const clearFilters = () => {
-    setFilters({ utorid: '', role: '', verified: '', activated: '' })
-    setTimeout(() => fetchUsers(1), 0)
+    const cleared = {
+      name: '',
+      role: '',
+      verified: '',
+      activated: '',
+      orderBy: 'points_desc'
+    }
+    setFilters(cleared)
+    setSearchParams({})
+    fetchUsers(1, cleared)
   }
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ marginBottom: '1rem' }}>All Users</h1>
+      <p style={{ marginBottom: '1.5rem', color: '#555' }}>
+        {count} total user{count !== 1 ? 's' : ''}
+      </p>
 
       <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
         <button
@@ -92,7 +112,7 @@ export default function ManagerUserList() {
           marginBottom: '1.5rem',
           background: '#f9f9f9'
         }}>
-          <input placeholder="Search by UTORid" value={filters.utorid} onChange={(e) => setFilters(f => ({ ...f, utorid: e.target.value }))} />
+          <input placeholder="Search by UTORid" value={filters.name} onChange={(e) => setFilters(f => ({ ...f, name: e.target.value }))} />
           <select value={filters.role} onChange={(e) => setFilters(f => ({ ...f, role: e.target.value }))}>
             <option value="">All Roles</option>
             <option value="regular">Regular</option>
@@ -110,7 +130,7 @@ export default function ManagerUserList() {
             <option value="true">Activated</option>
             <option value="false">Not Activated</option>
           </select>
-          <select value={orderBy} onChange={(e) => setOrderBy(e.target.value)}>
+          <select value={filters.orderBy} onChange={(e) => setFilters(f => ({ ...f, orderBy: e.target.value }))}>
             <option value="points_desc">Points: High → Low</option>
             <option value="points_asc">Points: Low → High</option>
           </select>

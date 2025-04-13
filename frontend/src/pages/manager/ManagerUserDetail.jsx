@@ -7,13 +7,14 @@ import { AuthContext } from '../../auth/AuthContext'
 export default function ManagerUserDetail() {
   const { userId } = useParams()
   const navigate = useNavigate()
-  const { user: currentUser } = useContext(AuthContext)
+  const { user: currentUser, activeRole } = useContext(AuthContext)
   const [user, setUser] = useState(null)
   const [form, setForm] = useState({ email: '', verified: true, suspicious: false, role: '' })
   const [initial, setInitial] = useState(null)
   const [editing, setEditing] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const role = activeRole || user.role
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -93,9 +94,16 @@ export default function ManagerUserDetail() {
 
   if (!user) return <p>Loading...</p>
 
-  const roleOptions = currentUser.role === 'superuser'
-    ? ['regular', 'cashier', 'manager', 'superuser']
-    : ['regular', 'cashier']
+  // const roleOptions = role === 'superuser'
+  //   ? ['regular', 'cashier', 'manager', 'superuser']
+  //   : ['regular', 'cashier']
+  const roleOptions = (() => {
+    const currentisSuperuser = role === 'superuser'
+    const editableTarget = ['regular', 'cashier'].includes(user?.role)
+    if(currentisSuperuser) return ['regular', 'cashier', 'manager', 'superuser']
+    if(!editableTarget) return [user?.role]
+    return ['regular', 'cashier']
+  })()
 
   const renderField = (label, value, fieldKey, editableType = 'text') => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -106,6 +114,7 @@ export default function ManagerUserDetail() {
             name={fieldKey}
             value={form[fieldKey]}
             onChange={handleChange}
+            disabled = {!roleOptions.includes(form[fieldKey])}
             style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc' }}
           >
             {roleOptions.map(r => (
