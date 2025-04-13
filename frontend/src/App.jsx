@@ -45,6 +45,9 @@ import CashierRegisterUser from './pages/cashier/CashierRegisterUser'
 import CashierEventList from './pages/cashier/CashierEventList'
 import CashierPromotionList from './pages/cashier/CashierPromotionList'
 import OrganizerDashboard from './pages/organizer/OrganizerDashboard'
+import OrganizerEventDetail from './pages/organizer/OrganizerEventDetail'
+import OrganizerAddGuest from './pages/organizer/OrganizerAddGuest'
+import OrganizerAwardPoints from './pages/organizer/OrganizerAwardPoints'
 
 export default function App() {
   const location = useLocation()
@@ -361,7 +364,32 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-          
+        <Route
+          path="/organizer/events/:eventId"
+          element={
+            <ProtectedRoute roles={['organizer']}>
+              <OrganizerEventDetail/>
+            </ProtectedRoute>
+          }
+        />  
+
+        <Route 
+          path="/organizer/events/:eventId/guests"
+          element={
+            <ProtectedRoute roles={['organizer']}>
+              <OrganizerAddGuest/>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/organizer/events/:eventId/reward"
+          element={
+            <ProtectedRoute roles={['organizer']}>
+              <OrganizerAwardPoints/>
+            </ProtectedRoute>
+          }
+        />
 
      </Routes>
     </>
