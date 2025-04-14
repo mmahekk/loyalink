@@ -1,6 +1,61 @@
-# This text file should explain how to deploy your website.
+# Clone the repository and go into the frontend folder
+cd frontend
 
-# You should write detailed description on:
+# Install project dependencies
+npm install
+npm install axios react-router-dom qrcode.react
+npm install react-hot-toast
 
-# 1. All the packages you need to install
-# 2. How to configure various servers (e.g., Nginx, Apache, etc)
+# Dev server (for local development)
+npm run dev
+
+# Build the project for production
+npm run build
+
+# Serve the built files (used in production/deployment)
+npx serve -s dist
+
+# Go into the backend folder
+cd backend
+
+# Install dependencies
+npm install
+
+# Run Prisma migrations (only once)
+npx prisma generate
+npx prisma migrate deploy
+
+# Start the server
+node index.js 3000
+
+Deployment Instructions (Railway)
+=================================
+
+To deploy the web application using Railway, follow the steps below. This includes deployment of both the frontend (React + Vite) and backend (Node.js + Express):
+
+Prerequisites
+-------------
+- A GitHub repository containing both the `frontend` and `backend` folders.
+- A Railway account connected to your GitHub.
+
+Frontend Setup
+--------------
+1. Click on "+ Create" in Railway and select "Deploy from GitHub repo".
+2. Choose your project repository.
+3. Under the Settings tab of the frontend service, make the following changes:
+   - Root Directory: frontend
+   - Build Command: npm run build
+   - Start Command: npx serve -s dist
+4. Click "Deploy".
+5. After deployment, go to Settings → Networking and click "Generate Domain" to create a public URL (e.g., https://your-frontend.up.railway.app).
+
+Backend Setup
+-------------
+1. Create another Railway service from the same repository.
+2. Under the Settings tab of the backend service, make the following changes:
+   - Root Directory: backend
+   - Start Command: node index.js
+3. Under the Variables tab, add an environment variable:
+   - FRONTEND_URL="https://your-frontend.up.railway.app"
+4. Click "Deploy" and then go to Settings → Networking and click "Generate Domain".
+"""
